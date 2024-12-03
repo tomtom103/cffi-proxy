@@ -5,8 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"http "github.com/bogdanfinn/fhttp""
-	"http "github.com/bogdanfinn/fhttp"/httptest"
 	"net/url"
 	"os"
 	"os/exec"
@@ -14,8 +12,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/tomtom103/proxy-cffi/goproxy"
-	"github.com/tomtom103/proxy-cffi/goproxy/ext/auth"
+	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/httptest"
+
+	"github.com/tomtom103/cffi-proxy/ext/auth"
+	"github.com/tomtom103/cffi-proxy/goproxy"
 )
 
 type ConstantHanlder string

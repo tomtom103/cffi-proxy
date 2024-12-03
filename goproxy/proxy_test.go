@@ -24,8 +24,8 @@ import (
 
 	tls "github.com/bogdanfinn/utls"
 
-	"github.com/tomtom103/proxy-cffi/goproxy"
-	goproxy_image "github.com/tomtom103/proxy-cffi/goproxy/ext/image"
+	goproxy_image "github.com/tomtom103/cffi-proxy/ext/image"
+	"github.com/tomtom103/cffi-proxy/goproxy"
 )
 
 var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}

@@ -2,12 +2,13 @@ package goproxy_html_test
 
 import (
 	"io/ioutil"
-	"http "github.com/bogdanfinn/fhttp""
-	"http "github.com/bogdanfinn/fhttp"/httptest"
 	"net/url"
 	"testing"
 
-	"github.com/tomtom103/proxy-cffi/goproxy"
+	http "github.com/bogdanfinn/fhttp"
+	"github.com/bogdanfinn/fhttp/httptest"
+
+	"github.com/tomtom103/cffi-proxy/goproxy"
 )
 
 type ConstantServer int

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/tomtom103/proxy-cffi/goproxy/regretable"
+	. "github.com/tomtom103/cffi-proxy/goproxy/regretable"
 )
 
 func TestRegretableReader(t *testing.T) {
@@ -20,7 +20,7 @@ func TestRegretableReader(t *testing.T) {
 	mb.Read(fivebytes)
 	mb.Regret()
 
-	s, _ := ioutil.ReadAll(mb)
+	s, _ := io.ReadAll(mb)
 	if string(s) != word {
 		t.Errorf("Uncommitted read is gone, [%d,%d] actual '%v' expected '%v'\n", len(s), len(word), string(s), word)
 	}
@@ -101,7 +101,7 @@ func assertEqual(t *testing.T, expected, actual string) {
 }
 
 func assertReadAll(t *testing.T, r io.Reader) string {
-	s, err := ioutil.ReadAll(r)
+	s, err := io.ReadAll(r)
 	if err != nil {
 		t.Fatal("error when reading", err)
 	}

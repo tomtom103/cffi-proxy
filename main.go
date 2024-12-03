@@ -25,14 +25,6 @@ func init() {
 	flag.IntVar(&port, "port", 8000, "Port where the proxy will listen on")
 }
 
-func destroyAll() {
-	tls_client_cffi.ClearSessionCache()
-}
-
-func destroySession(sessionId string) {
-	tls_client_cffi.RemoveSession(sessionId)
-}
-
 // Response represents the structure of the response sent back to the client.
 type Response struct {
 	Id           string              `json:"id"`
@@ -151,6 +143,16 @@ func buildCookies(cookies []tls_client_cffi.Cookie) []*http.Cookie {
 	return ret
 }
 
+// func getRandomTLSProfile() {
+// 	keys := make([]string, 0, len(profiles.MappedTLSClients))
+// 	for k := range profiles.MappedTLSClients {
+// 		keys = append(keys, k)
+// 	}
+// 	randIndex := rand.Intn(len(keys))
+// 	randomKey := keys[randIndex]
+// 	return randomKey
+// }
+
 // handleRequest processes incoming HTTP requests using tls-client.
 func handleRequest(logger *log.Logger) func(req *http.Request, ctx *proxy.ProxyCtx) (*http.Request, *http.Response) {
 	return func(req *http.Request, ctx *proxy.ProxyCtx) (*http.Request, *http.Response) {
@@ -159,9 +161,14 @@ func handleRequest(logger *log.Logger) func(req *http.Request, ctx *proxy.ProxyC
 		// Convert the incoming *http.Request to ExtendedRequestInput
 		requestInput := ExtendedRequestInput{
 			RequestInput: tls_client_cffi.RequestInput{
-				RequestMethod: req.Method,
-				RequestUrl:    req.URL.String(),
-				Headers:       make(map[string]string),
+				RequestMethod:               req.Method,
+				RequestUrl:                  req.URL.String(),
+				Headers:                     make(map[string]string),
+				WithRandomTLSExtensionOrder: true,
+				WithDebug:                   true,
+				FollowRedirects:             true,
+				// TODO: Add proxy rotation here eventually
+				// ProxyUrl: "",
 			},
 			DetectEncoding: true,
 		}
@@ -173,10 +180,7 @@ func handleRequest(logger *log.Logger) func(req *http.Request, ctx *proxy.ProxyC
 
 		requestInput.RequestInput.Headers["X-Hello-World"] = "true"
 
-		// Handle the request using tls-client
 		response := request(&requestInput)
-
-		// Build the *http.Response to return to the client
 		resp := &http.Response{
 			StatusCode: response.Status,
 			Header:     response.Headers,
@@ -229,7 +233,6 @@ func handleResponse(logger *log.Logger) func(resp *http.Response, ctx *proxy.Pro
 	return func(resp *http.Response, ctx *proxy.ProxyCtx) *http.Response {
 		logger.Printf("Modifying response from %s", resp.Request.URL)
 
-		// Set your custom header
 		resp.Header.Set("X-Returned-By", "My-Proxy")
 
 		return resp
@@ -273,7 +276,6 @@ func main() {
 	<-stop
 	logger.Println("Shutting down the server...")
 
-	// Shutdown the server gracefully
 	if err := server.Shutdown(context.Background()); err != nil {
 		logger.Fatalf("Server Shutdown Failed: %v", err)
 	}
