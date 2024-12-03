@@ -1,7 +1,7 @@
 package goproxy_html_test
 
 import (
-	"io/ioutil"
+	"io"
 	"net/url"
 	"testing"
 
@@ -9,6 +9,7 @@ import (
 	"github.com/bogdanfinn/fhttp/httptest"
 
 	"github.com/tomtom103/cffi-proxy/goproxy"
+	goproxy_html "github.com/tomtom103/cffi-proxy/goproxy/ext/html"
 )
 
 type ConstantServer int
@@ -40,7 +41,7 @@ func TestCharset(t *testing.T) {
 	if err != nil {
 		t.Fatal("GET:", err)
 	}
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal("readAll:", err)
 	}

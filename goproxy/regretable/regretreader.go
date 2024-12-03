@@ -12,7 +12,7 @@ import (
 //	var b = make([]byte,1)
 //	rb.Read(b) // b[0] = 1
 //	rb.Regret()
-//	ioutil.ReadAll(rb.Read) // returns []byte{1,2,3},nil
+//	io.ReadAll(rb.Read) // returns []byte{1,2,3},nil
 type RegretableReader struct {
 	reader   io.Reader
 	overflow bool
@@ -60,7 +60,7 @@ func (rb *RegretableReader) Regret() {
 //	rb.Forget()
 //	rb.Read(b) // b[0] = 2
 //	rb.Regret()
-//	ioutil.ReadAll(rb.Read) // returns []byte{2,3},nil
+//	io.ReadAll(rb.Read) // returns []byte{2,3},nil
 func (rb *RegretableReader) Forget() {
 	if rb.overflow {
 		panic("forgetting after overflow makes no sense")

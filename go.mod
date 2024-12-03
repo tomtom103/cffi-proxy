@@ -6,15 +6,16 @@ require (
 	github.com/bogdanfinn/fhttp v0.5.29
 	github.com/bogdanfinn/tls-client v1.7.9
 	github.com/bogdanfinn/utls v1.6.2
-	github.com/cristalhq/base64 v0.1.2
-	github.com/google/uuid v1.6.0
+	github.com/rogpeppe/go-charset v0.0.0-20190617161244-0dc95cdf6f31
 	github.com/tomtom103/cffi-proxy/ext v0.0.0-20241203022839-90b76f5d4dcd
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	golang.org/x/net v0.31.0
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/quic-go/quic-go v0.48.1 // indirect
 	github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5 // indirect

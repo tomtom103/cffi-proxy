@@ -3,7 +3,7 @@ package regretable_test
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
+
 	"strings"
 	"testing"
 
@@ -36,7 +36,7 @@ func TestRegretableEmptyRead(t *testing.T) {
 	mb.Read(zero)
 	mb.Regret()
 
-	s, err := ioutil.ReadAll(mb)
+	s, err := io.ReadAll(mb)
 	if string(s) != word {
 		t.Error("Uncommitted read is gone, actual:", string(s), "expected:", word, "err:", err)
 	}
@@ -56,7 +56,7 @@ func TestRegretableAlsoEmptyRead(t *testing.T) {
 	mb.Read(five)
 	mb.Regret()
 
-	s, _ := ioutil.ReadAll(mb)
+	s, _ := io.ReadAll(mb)
 	if string(s) != word {
 		t.Error("Uncommitted read is gone", string(s), "expected", word)
 	}
@@ -72,7 +72,7 @@ func TestRegretableRegretBeforeRead(t *testing.T) {
 	mb.Regret()
 	mb.Read(five)
 
-	s, err := ioutil.ReadAll(mb)
+	s, err := io.ReadAll(mb)
 	if string(s) != "678" {
 		t.Error("Uncommitted read is gone", string(s), len(string(s)), "expected", "678", len("678"), "err:", err)
 	}
@@ -88,7 +88,7 @@ func TestRegretableFullRead(t *testing.T) {
 	mb.Read(twenty)
 	mb.Regret()
 
-	s, _ := ioutil.ReadAll(mb)
+	s, _ := io.ReadAll(mb)
 	if string(s) != word {
 		t.Error("Uncommitted read is gone", string(s), len(string(s)), "expected", word, len(word))
 	}
@@ -149,7 +149,7 @@ func TestRegretableCloserSizeRegrets(t *testing.T) {
 	}()
 	buf := new(bytes.Buffer)
 	buf.WriteString("123456")
-	mb := NewRegretableReaderCloserSize(ioutil.NopCloser(buf), 3)
+	mb := NewRegretableReaderCloserSize(io.NopCloser(buf), 3)
 	mb.Read(make([]byte, 4))
 	mb.Regret()
 }

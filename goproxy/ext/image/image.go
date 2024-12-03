@@ -6,15 +6,15 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	"image/png"
-	"io/ioutil"
+	"io"
 
 	http "github.com/bogdanfinn/fhttp"
 
-	proxy "github.com/tomtom103/cffi-proxy/goproxy"
+	. "github.com/tomtom103/cffi-proxy/goproxy"
 	"github.com/tomtom103/cffi-proxy/goproxy/regretable"
 )
 
-var RespIsImage = proxy.ContentTypeIs("image/gif",
+var RespIsImage = ContentTypeIs("image/gif",
 	"image/jpeg",
 	"image/pjpeg",
 	"application/octet-stream",
@@ -22,8 +22,8 @@ var RespIsImage = proxy.ContentTypeIs("image/gif",
 
 // "image/tiff" tiff support is in external package, and rarely used, so we omitted it
 
-func HandleImage(f func(img image.Image, ctx *proxy.ProxyCtx) image.Image) proxy.RespHandler {
-	return proxy.FuncRespHandler(func(resp *http.Response, ctx *proxy.ProxyCtx) *http.Response {
+func HandleImage(f func(img image.Image, ctx *ProxyCtx) image.Image) RespHandler {
+	return FuncRespHandler(func(resp *http.Response, ctx *ProxyCtx) *http.Response {
 		if !RespIsImage.HandleResp(resp, ctx) {
 			return resp
 		}
@@ -74,7 +74,7 @@ func HandleImage(f func(img image.Image, ctx *proxy.ProxyCtx) image.Image) proxy
 		default:
 			panic("unhandlable type" + contentType)
 		}
-		resp.Body = ioutil.NopCloser(buf)
+		resp.Body = io.NopCloser(buf)
 		return resp
 	})
 }

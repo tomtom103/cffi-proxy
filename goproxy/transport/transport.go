@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+
 	"log"
 	"net"
 	"net/url"
@@ -783,6 +783,6 @@ type discardOnCloseReadCloser struct {
 }
 
 func (d *discardOnCloseReadCloser) Close() error {
-	io.Copy(ioutil.Discard, d.ReadCloser) // ignore errors; likely invalid or already closed
+	io.Copy(io.Discard, d.ReadCloser) // ignore errors; likely invalid or already closed
 	return d.ReadCloser.Close()
 }

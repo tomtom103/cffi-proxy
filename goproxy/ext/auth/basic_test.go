@@ -3,7 +3,7 @@ package auth_test
 import (
 	"encoding/base64"
 	"io"
-	"io/ioutil"
+
 	"net"
 	"net/url"
 	"os"
@@ -15,8 +15,8 @@ import (
 	http "github.com/bogdanfinn/fhttp"
 	"github.com/bogdanfinn/fhttp/httptest"
 
-	"github.com/tomtom103/cffi-proxy/ext/auth"
 	"github.com/tomtom103/cffi-proxy/goproxy"
+	"github.com/tomtom103/cffi-proxy/goproxy/ext/auth"
 )
 
 type ConstantHanlder string
@@ -134,7 +134,7 @@ func TestBasicAuth(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Error("Expected status 200 OK, got", resp.Status)
 	}
-	msg, err := ioutil.ReadAll(resp.Body)
+	msg, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

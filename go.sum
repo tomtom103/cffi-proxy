@@ -8,8 +8,6 @@ github.com/bogdanfinn/utls v1.6.2 h1:82QYt8sjweKzW71D8/6DTAebZleRyJA+l56bplMM93M
 github.com/bogdanfinn/utls v1.6.2/go.mod h1:czcHxHGsc1q9NjgWSeSinQZzn6MR76zUmGVIGanSXO0=
 github.com/cloudflare/circl v1.5.0 h1:hxIWksrX6XN5a1L2TI/h53AGPhNHoUBo+TD1ms9+pys=
 github.com/cloudflare/circl v1.5.0/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
-github.com/cristalhq/base64 v0.1.2 h1:edsefYyYDiac7Ytdh2xdaiiSSJzcI2f0yIkdGEf1qY0=
-github.com/cristalhq/base64 v0.1.2/go.mod h1:sy4+2Hale2KbtSqkzpdMeYTP/IrB+HCvxVHWsh2VSYk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
@@ -20,6 +18,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/quic-go/quic-go v0.48.1 h1:y/8xmfWI9qmGTc+lBr4jKRUWLGSlSigv847ULJ4hYXA=
 github.com/quic-go/quic-go v0.48.1/go.mod h1:yBgs3rWBOADpga7F+jJsb6Ybg1LSYiQvwWlLX+/6HMs=
+github.com/rogpeppe/go-charset v0.0.0-20190617161244-0dc95cdf6f31 h1:DE4LcMKyqAVa6a0CGmVxANbnVb7stzMmPkQiieyNmfQ=
+github.com/rogpeppe/go-charset v0.0.0-20190617161244-0dc95cdf6f31/go.mod h1:qgYeAmZ5ZIpBWTGllZSQnw97Dj+woV0toclVaRGI8pc=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/tam7t/hpkp v0.0.0-20160821193359-2b70b4024ed5 h1:YqAladjX7xpA6BM04leXMWAEjS0mTZ5kUU9KRBriQJc=

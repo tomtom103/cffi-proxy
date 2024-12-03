@@ -3,7 +3,8 @@ package auth
 import (
 	"bytes"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
+
 	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -24,7 +25,7 @@ func BasicUnauthorized(req *http.Request, realm string) *http.Response {
 			"Proxy-Authenticate": []string{"Basic realm=" + realm},
 			"Proxy-Connection":   []string{"close"},
 		},
-		Body:          ioutil.NopCloser(bytes.NewBuffer(unauthorizedMsg)),
+		Body:          io.NopCloser(bytes.NewBuffer(unauthorizedMsg)),
 		ContentLength: int64(len(unauthorizedMsg)),
 	}
 }

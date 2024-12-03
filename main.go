@@ -10,13 +10,11 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"unicode/utf8"
 
 	http "github.com/bogdanfinn/fhttp"
-	tls_client_cffi "github.com/bogdanfinn/tls-client/cffi_src"
-	"github.com/cristalhq/base64"
-	"github.com/google/uuid"
+	"github.com/tomtom103/cffi-proxy/goproxy"
 	proxy "github.com/tomtom103/cffi-proxy/goproxy"
+	mitm "github.com/tomtom103/cffi-proxy/goproxy/mitm"
 )
 
 var port int
@@ -25,218 +23,60 @@ func init() {
 	flag.IntVar(&port, "port", 8000, "Port where the proxy will listen on")
 }
 
-// Response represents the structure of the response sent back to the client.
-type Response struct {
-	Id           string              `json:"id"`
-	Body         string              `json:"body"`
-	Cookies      map[string]string   `json:"cookies"`
-	Headers      map[string][]string `json:"headers"`
-	SessionId    string              `json:"sessionId,omitempty"`
-	Status       int                 `json:"status"`
-	Target       string              `json:"target"`
-	UsedProtocol string              `json:"usedProtocol"`
-	IsBase64     bool                `json:"isBase64,omitempty"`
+type RequestHandler interface {
+	handleConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string)
+	handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response)
+	handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response
 }
 
-// ExtendedRequestInput extends the RequestInput with additional fields.
-type ExtendedRequestInput struct {
-	tls_client_cffi.RequestInput
-	WantHistory    bool `json:"wantHistory"`
-	DetectEncoding bool `json:"detectEncoding"`
+// Implementation of the RequestHandler interface
+type MitmRequestHandler struct {
+	transport mitm.RequestTransport
 }
 
-// BuildResponse constructs the Response object from the HTTP response.
-func BuildResponse(
-	sessionId string,
-	withSession bool,
-	resp *http.Response,
-	cookies []*http.Cookie,
-	detect bool,
-) (Response, *tls_client_cffi.TLSClientError) {
-	defer resp.Body.Close()
+func (h *MitmRequestHandler) handleConnect(host string, ctx *proxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+	return proxy.AlwaysMitm(host, ctx)
+}
 
-	ce := resp.Header.Get("Content-Encoding")
+func (h *MitmRequestHandler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+	ctx.Logf("Handling request: %s %s", req.Method, req.URL.String())
 
-	var respBodyBytes []byte
-	var err error
-
-	if !resp.Uncompressed {
-		resp.Body = http.DecompressBodyByType(resp.Body, ce)
-	}
-
-	respBodyBytes, err = io.ReadAll(resp.Body)
+	response, err := h.transport.HandleRequest(req, ctx)
 	if err != nil {
-		clientErr := tls_client_cffi.NewTLSClientError(err)
-		return Response{}, clientErr
-	}
-
-	var finalResponse string
-
-	isBase64 := detect && !utf8.Valid(respBodyBytes)
-	if isBase64 {
-		finalResponse = base64.StdEncoding.EncodeToString(respBodyBytes)
-	} else {
-		finalResponse = string(respBodyBytes)
-	}
-
-	response := Response{
-		Id:           uuid.New().String(),
-		Status:       resp.StatusCode,
-		UsedProtocol: resp.Proto,
-		Body:         finalResponse,
-		Headers:      resp.Header,
-		Target:       "",
-		Cookies:      cookiesToMap(cookies),
-		IsBase64:     isBase64,
-	}
-
-	if resp.Request != nil && resp.Request.URL != nil {
-		response.Target = resp.Request.URL.String()
-	}
-
-	if withSession {
-		response.SessionId = sessionId
-	}
-
-	return response, nil
-}
-
-func cookiesToMap(cookies []*http.Cookie) map[string]string {
-	ret := make(map[string]string, 0)
-
-	for _, c := range cookies {
-		ret[c.Name] = c.Value
-	}
-
-	return ret
-}
-
-func handleErrorResponse(sessionId string, withSession bool, err *tls_client_cffi.TLSClientError) *Response {
-	response := Response{
-		Id:      uuid.New().String(),
-		Status:  0,
-		Body:    err.Error(),
-		Headers: nil,
-		Cookies: nil,
-	}
-
-	if withSession {
-		response.SessionId = sessionId
-	}
-
-	return &response
-}
-
-func buildCookies(cookies []tls_client_cffi.Cookie) []*http.Cookie {
-	var ret []*http.Cookie
-
-	for _, cookie := range cookies {
-		ret = append(ret, &http.Cookie{
-			Name:    cookie.Name,
-			Value:   cookie.Value,
-			Path:    cookie.Path,
-			Domain:  cookie.Domain,
-			Expires: cookie.Expires.Time,
-		})
-	}
-
-	return ret
-}
-
-// func getRandomTLSProfile() {
-// 	keys := make([]string, 0, len(profiles.MappedTLSClients))
-// 	for k := range profiles.MappedTLSClients {
-// 		keys = append(keys, k)
-// 	}
-// 	randIndex := rand.Intn(len(keys))
-// 	randomKey := keys[randIndex]
-// 	return randomKey
-// }
-
-// handleRequest processes incoming HTTP requests using tls-client.
-func handleRequest(logger *log.Logger) func(req *http.Request, ctx *proxy.ProxyCtx) (*http.Request, *http.Response) {
-	return func(req *http.Request, ctx *proxy.ProxyCtx) (*http.Request, *http.Response) {
-		logger.Printf("Handling request for %s", req.URL)
-
-		// Convert the incoming *http.Request to ExtendedRequestInput
-		requestInput := ExtendedRequestInput{
-			RequestInput: tls_client_cffi.RequestInput{
-				RequestMethod:               req.Method,
-				RequestUrl:                  req.URL.String(),
-				Headers:                     make(map[string]string),
-				WithRandomTLSExtensionOrder: true,
-				WithDebug:                   true,
-				FollowRedirects:             true,
-				// TODO: Add proxy rotation here eventually
-				// ProxyUrl: "",
-			},
-			DetectEncoding: true,
-		}
-
-		// Copy headers from the incoming request
-		for name, values := range req.Header {
-			requestInput.RequestInput.Headers[name] = values[0]
-		}
-
-		requestInput.RequestInput.Headers["X-Hello-World"] = "true"
-
-		response := request(&requestInput)
-		resp := &http.Response{
-			StatusCode: response.Status,
-			Header:     response.Headers,
-			Body:       io.NopCloser(strings.NewReader(response.Body)),
+		// Log and return an error response
+		ctx.Warnf("Error handling request: %v", err)
+		return req, &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Body:       io.NopCloser(strings.NewReader(fmt.Sprintf("Proxy error: %v", err))),
 			Request:    req,
 		}
-
-		return req, resp
 	}
+
+	// If the transport successfully handles the request, return the response
+	return nil, response
 }
 
-func request(requestInput *ExtendedRequestInput) *Response {
-	tlsClient, sessionId, withSession, err := tls_client_cffi.CreateClient(requestInput.RequestInput)
-	if err != nil {
-		return handleErrorResponse(sessionId, withSession, err)
+func (h *MitmRequestHandler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+	ctx.Logf("Handling response: %s %d", resp.Request.URL.String(), resp.StatusCode)
+
+	// Example: Add a custom header
+	resp.Header.Set("X-Proxy-Handler", "MitmRequestHandler")
+
+	// Example: Log response details
+	ctx.Logf("Response Headers: %v", resp.Header)
+
+	// Example: Modify the response body (if needed)
+	if resp.Body != nil {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			ctx.Warnf("Error reading response body: %v", err)
+		} else {
+			ctx.Logf("Response body: %s", string(body))
+		}
+		resp.Body = io.NopCloser(strings.NewReader(string(body)))
 	}
 
-	req, err := tls_client_cffi.BuildRequest(requestInput.RequestInput)
-	if err != nil {
-		clientErr := tls_client_cffi.NewTLSClientError(err)
-		return handleErrorResponse(sessionId, withSession, clientErr)
-	}
-
-	cookies := buildCookies(requestInput.RequestInput.RequestCookies)
-	if len(cookies) > 0 {
-		tlsClient.SetCookies(req.URL, cookies)
-	}
-
-	resp, reqErr := tlsClient.Do(req)
-	if reqErr != nil {
-		clientErr := tls_client_cffi.NewTLSClientError(fmt.Errorf("failed to do request: %w", reqErr))
-		return handleErrorResponse(sessionId, withSession, clientErr)
-	}
-
-	if resp == nil {
-		clientErr := tls_client_cffi.NewTLSClientError(fmt.Errorf("response is nil"))
-		return handleErrorResponse(sessionId, withSession, clientErr)
-	}
-
-	targetCookies := tlsClient.GetCookies(resp.Request.URL)
-	response, err := BuildResponse(sessionId, withSession, resp, targetCookies, requestInput.DetectEncoding)
-	if err != nil {
-		return handleErrorResponse(sessionId, withSession, err)
-	}
-
-	return &response
-}
-
-func handleResponse(logger *log.Logger) func(resp *http.Response, ctx *proxy.ProxyCtx) *http.Response {
-	return func(resp *http.Response, ctx *proxy.ProxyCtx) *http.Response {
-		logger.Printf("Modifying response from %s", resp.Request.URL)
-
-		resp.Header.Set("X-Returned-By", "My-Proxy")
-
-		return resp
-	}
+	return resp
 }
 
 func main() {
@@ -250,13 +90,21 @@ func main() {
 	proxyServer := proxy.NewProxyHttpServer()
 	proxyServer.Verbose = true
 
+	transport := &mitm.CffiRequestTransport{}
+	handler := &MitmRequestHandler{transport: transport}
+
 	// Setup handlers
 	proxyServer.OnRequest().HandleConnectFunc(func(host string, ctx *proxy.ProxyCtx) (*proxy.ConnectAction, string) {
-		logger.Printf("Handling CONNECT request for host: %s", host)
-		return proxy.AlwaysMitm(host, ctx)
+		ctx.Logf("Handling CONNECT request for host: %s", host)
+		return handler.handleConnect(host, ctx)
 	})
-	proxyServer.OnRequest().DoFunc(handleRequest(logger))
-	proxyServer.OnResponse().DoFunc(handleResponse(logger))
+	proxyServer.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		// ctx.Logf("Handling CONNECT request for )
+		return handler.handleRequest(req, ctx)
+	})
+	proxyServer.OnResponse().DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		return handler.handleResponse(resp, ctx)
+	})
 
 	addr := fmt.Sprintf(":%d", port)
 	server := &http.Server{

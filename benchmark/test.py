@@ -19,13 +19,9 @@ async def async_main() -> None:
 
 def main() -> None:
     with httpx.Client(proxy="http://0.0.0.0:8000", verify=False) as client:
-        response = client.get("https://www.investing.com/equities/nice-information-service-co-ltd-scoreboard")
-        print(response.content)
-    #     response = client.get("https://httpbin.org/get")
-    #     print(response.headers)
-    #     print(response.json())
-
-    # asyncio.run(async_main())
+        response = client.get("https://httpbin.org/get")
+        print(response.headers)
+        print(response.json())
 
 if __name__ == "__main__":
     main()
