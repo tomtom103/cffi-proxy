@@ -41,6 +41,8 @@ func (h *MitmRequestHandler) handleConnect(host string, ctx *proxy.ProxyCtx) (*g
 func (h *MitmRequestHandler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	ctx.Logf("Handling request: %s %s", req.Method, req.URL.String())
 
+	ctx.Logf("Request Headers: %v", req.Header)
+
 	response, err := h.transport.HandleRequest(req, ctx)
 	if err != nil {
 		// Log and return an error response
@@ -90,6 +92,9 @@ func main() {
 	proxyServer := proxy.NewProxyHttpServer()
 	proxyServer.Verbose = true
 
+	// TODO: Figure out whether I want to implement the `RoundTripper` interface
+	// directly included with goproxy.
+	// Not a fan of the interface but might be good to get native support
 	transport := &mitm.CffiRequestTransport{}
 	handler := &MitmRequestHandler{transport: transport}
 
